@@ -13,6 +13,11 @@ const UserSchema = Schema({
     required: true,
     unique: true,
     lowercase
+  },
+  password: {
+    type: String,
+    minLength: 12,
+    required: true
   }
 });
 
@@ -21,6 +26,15 @@ UserSchema.pre('save', function(next) {
   // Fill this middleware in with the Proper password encrypting, bcrypt.hash()
   // if there is an error here you'll need to handle it by calling next(err);
   // Once the password is encrypted, call next() so that your userController and create a user
+  return bcrypt
+    .hash(this.password, SALT_ROUNDS)
+    .then(hash => {
+      this.password = hash;
+      return next();
+    })
+    .catch(err => {
+      res.status(500).json({ error: err.message });
+    });
 });
 
 UserSchema.methods.checkPassword = function(plainTextPW, callBack) {
